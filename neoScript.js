@@ -1,65 +1,37 @@
 // neoScript.js
 
 document.addEventListener("DOMContentLoaded", function () {
-  // We assume neoData is already loaded from neoData.js
-
-  // References to HTML elements
+  // 1) Grab references
   const searchBox = document.getElementById("searchBox");
   const searchButton = document.getElementById("searchButton");
   const clearButton = document.getElementById("clearButton");
   const collapseAllBtn = document.getElementById("collapseAllBtn");
   const generateButton = document.getElementById("generateButton");
   const outputText = document.getElementById("outputText");
-  const sectionSelectors = document.querySelectorAll(".sectionSelector");
 
-  // Each section's container
+  // 7 checkboxes for each section
+  const sectionSelectors = document.querySelectorAll(".sectionSelector");
+  const selectAllSections = document.getElementById("selectAllSections");
+
+  // The containers where we will build the collapsible trees
   const specsContainer = document.getElementById("specificationsContent");
   const progContainer = document.getElementById("programmingContent");
   const troubleContainer = document.getElementById("troubleshootingContent");
   const reportContainer = document.getElementById("reportingCodesContent");
-  const wordLibContainer = document.getElementById("wordLibraryContent");
+  const wordLibContainer = document.getElementById("wordLibContent");
   const powerCalcContainer = document.getElementById("powerCalcContent");
   const docContainer = document.getElementById("documentationContent");
 
-  // We'll store references in an object for convenience
-  const sectionMap = {
-    "Specifications": {
-      data: neoData["Specifications"],
-      container: specsContainer
-    },
-    "Programming": {
-      data: neoData["Programming"],
-      container: progContainer
-    },
-    "Troubleshooting": {
-      data: neoData["Troubleshooting"],
-      container: troubleContainer
-    },
-    "Reporting Codes": {
-      data: neoData["Reporting Codes"],
-      container: reportContainer
-    },
-    "Word Library": {
-      data: neoData["Word Library"],
-      container: wordLibContainer
-    },
-    "Power Consumption Calculator": {
-      data: neoData["Power Consumption Calculator"],
-      container: powerCalcContainer
-    },
-    "Documentation": {
-      data: neoData["Documentation"],
-      container: docContainer
-    }
-  };
+  // 2) Build each section's tree
+  buildTree(neoSpecData, specsContainer);
+  buildTree(neoProgData, progContainer); // This is your old "Programming" data
+  buildTree(neoTroubleData, troubleContainer);
+  buildTree(neoReportData, reportContainer);
+  buildTree(neoWordLibData, wordLibContainer);
+  buildTree(neoPowerCalcData, powerCalcContainer);
+  buildTree(neoDocData, docContainer);
 
-  // 1) Build each section's collapsible tree
-  Object.keys(sectionMap).forEach((sectionName) => {
-    const info = sectionMap[sectionName];
-    buildTree(info.data, info.container);
-  });
-
-  // 2) Hook up search button & "Enter" key
+  // 3) Add event listeners
   searchButton.addEventListener("click", doSearch);
   searchBox.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -68,7 +40,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // 3) Clear button
   clearButton.addEventListener("click", () => {
     searchBox.value = "";
     clearHighlights();
@@ -77,93 +48,100 @@ document.addEventListener("DOMContentLoaded", function () {
     outputText.value = "";
   });
 
-  // 4) Collapse All button
   collapseAllBtn.addEventListener("click", () => {
     collapseAll();
-    // Also hide any .descBox that might be open
     hideAllDescriptions();
   });
 
-  // 5) Generate button (optional)
   generateButton.addEventListener("click", () => {
     let textResult = "";
-    // We'll gather from each section's top container
-    Object.keys(sectionMap).forEach((secName) => {
-      const container = sectionMap[secName].container;
-      textResult += buildSelectedHierarchy(container, 0);
-    });
+    // gather from all 7 containers
+    textResult += buildSelectedHierarchy(specsContainer, 0);
+    textResult += buildSelectedHierarchy(progContainer, 0);
+    textResult += buildSelectedHierarchy(troubleContainer, 0);
+    textResult += buildSelectedHierarchy(reportContainer, 0);
+    textResult += buildSelectedHierarchy(wordLibContainer, 0);
+    textResult += buildSelectedHierarchy(powerCalcContainer, 0);
+    textResult += buildSelectedHierarchy(docContainer, 0);
     outputText.value = textResult;
   });
 
-  // 6) Ensure child check => parent check
-  // We'll watch each "sectionContent" for changes
+  // “Check a child => also check its parents” logic
   document.body.addEventListener("change", (e) => {
     if (e.target.matches(".itemCheckbox") && e.target.checked) {
       checkParents(e.target);
     }
   });
 
+  // 4) “Select All / Unselect All” for sections
+  selectAllSections.addEventListener("change", () => {
+    // if we just checked it, select all; if we unchecked it, unselect all
+    const check = selectAllSections.checked;
+    sectionSelectors.forEach(chk => {
+      chk.checked = check;
+    });
+  });
+
   /***************************************************************
-   * doSearch()
-   *   - Identify which sections are selected (via .sectionSelector checkboxes)
-   *   - Clear existing highlights / selections
-   *   - For each selected section, highlight matches
-   *   - Expand the matching items
+   * doSearch(): searches only within selected sections
    ***************************************************************/
   function doSearch() {
     const query = searchBox.value.trim();
     if (!query) return;
 
+    // Clear old highlights, uncheck boxes, collapse everything
     uncheckAll();
     clearHighlights();
     collapseAll();
     hideAllDescriptions();
 
-    // Which sections are checked?
+    // Which sections are active?
     const activeSections = [];
-    sectionSelectors.forEach((chk) => {
+    sectionSelectors.forEach(chk => {
       if (chk.checked) activeSections.push(chk.value);
     });
-    if (activeSections.length === 0) return; // nothing to search in
+    if (activeSections.length === 0) return; // No sections selected
 
-    // Perform the highlight + expand for each selected section
-    activeSections.forEach((secName) => {
-      const container = sectionMap[secName].container;
-      performSearch(query, container);
+    // search each relevant container
+    activeSections.forEach(sectionName => {
+      if (sectionName === "Specifications") performSearch(query, specsContainer);
+      else if (sectionName === "Programming") performSearch(query, progContainer);
+      else if (sectionName === "Troubleshooting") performSearch(query, troubleContainer);
+      else if (sectionName === "Reporting Codes") performSearch(query, reportContainer);
+      else if (sectionName === "Word Library") performSearch(query, wordLibContainer);
+      else if (sectionName === "Power Calc") performSearch(query, powerCalcContainer);
+      else if (sectionName === "Documentation") performSearch(query, docContainer);
     });
   }
 
   /***************************************************************
    * buildTree(obj, container)
-   * Recursively builds the collapsible tree from 'obj'
+   *  Recursively creates the collapsible structure exactly like before
    ***************************************************************/
   function buildTree(obj, container) {
-    // If it's not an object, do nothing
-    if (typeof obj !== "object" || obj === null) return;
+    if (typeof obj !== "object" || !obj) return; // safety
 
     Object.keys(obj).forEach((key) => {
       if (key === "Description") {
-        // Skip building a child for the "Description" property here,
-        // because we'll handle it as a hidden text below.
+        // skip building a child for "Description" here
         return;
       }
 
       const val = obj[key];
 
-      // If there's a Description on this child, store it
+      // If there's a Description, store it separately
       let childDesc = "";
       if (typeof val === "object" && val !== null && "Description" in val) {
         childDesc = val.Description;
-        // remove it so we don't parse it again as a sub-node
-        delete val.Description;
+        delete val.Description; // so we don't build another node for it
       }
 
-      // Make a .section
+      // Create the .section
       const sectionDiv = document.createElement("div");
       sectionDiv.classList.add("section");
       container.appendChild(sectionDiv);
 
-      // Header
+      // Create header row
       const headerDiv = document.createElement("div");
       headerDiv.classList.add("section-header");
       sectionDiv.appendChild(headerDiv);
@@ -174,7 +152,7 @@ document.addEventListener("DOMContentLoaded", function () {
       chk.classList.add("itemCheckbox");
       headerDiv.appendChild(chk);
 
-      // Toggle button
+      // Toggle (+/-)
       const toggleBtn = document.createElement("button");
       toggleBtn.textContent = "+";
       headerDiv.appendChild(toggleBtn);
@@ -184,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
       labelSpan.textContent = key;
       headerDiv.appendChild(labelSpan);
 
-      // (i) info
+      // (i) Info button
       const infoBtn = document.createElement("span");
       infoBtn.style.marginLeft = "8px";
       infoBtn.style.color = "blue";
@@ -193,26 +171,27 @@ document.addEventListener("DOMContentLoaded", function () {
       infoBtn.title = "Toggle description";
       headerDiv.appendChild(infoBtn);
 
-      // Content
+      // Child container
       const contentDiv = document.createElement("div");
       contentDiv.classList.add("section-content");
       sectionDiv.appendChild(contentDiv);
 
-      // descBox if we have childDesc
+      // If there's a childDesc, create a descBox
       let descBox = null;
       if (childDesc) {
         descBox = document.createElement("div");
         descBox.classList.add("descBox");
         descBox.style.display = "none";
         descBox.textContent = childDesc;
-        // insert it before contentDiv
+        // Insert before contentDiv
         sectionDiv.insertBefore(descBox, contentDiv);
       }
 
-      // If val is an object, build recursively
+      // If val is an object, build subnodes
       if (typeof val === "object" && val !== null) {
         buildTree(val, contentDiv);
-        // Toggle expand
+
+        // Expand/collapse
         toggleBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           if (contentDiv.classList.contains("open")) {
@@ -224,12 +203,12 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         });
       } else {
-        // It's just a leaf node; no subobject
+        // Leaf
         toggleBtn.textContent = "-";
         toggleBtn.disabled = true;
       }
 
-      // Info button toggles descBox
+      // Info button => toggle descBox
       infoBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (descBox) {
@@ -241,15 +220,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /***************************************************************
    * performSearch(query, container)
-   *   - highlight matches in that container
-   *   - expand parents
+   *   - highlight / expand matches in container
    ***************************************************************/
   function performSearch(query, container) {
     const tokens = query.toLowerCase().split(/\s+/);
-    // find all .section-header in container
     const allHeaders = container.querySelectorAll(".section-header");
 
-    allHeaders.forEach((headerDiv) => {
+    allHeaders.forEach(headerDiv => {
       const labelSpan = headerDiv.querySelector("span:not([style])");
       if (!labelSpan) return;
       const text = labelSpan.textContent.toLowerCase();
@@ -264,9 +241,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function highlightSpan(span, tokens) {
     let html = span.textContent;
-    tokens.forEach((t) => {
+    tokens.forEach(t => {
       const regex = new RegExp(t, "gi");
-      html = html.replace(regex, (m) => `<span class="highlight">${m}</span>`);
+      html = html.replace(regex, m => `<span class="highlight">${m}</span>`);
     });
     span.innerHTML = html;
   }
@@ -314,7 +291,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /***************************************************************
    * hideAllDescriptions()
-   *   - hides all .descBox
    ***************************************************************/
   function hideAllDescriptions() {
     const allDesc = document.querySelectorAll(".descBox");
@@ -323,7 +299,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /***************************************************************
    * uncheckAll()
-   *   - unchecks all .itemCheckbox
    ***************************************************************/
   function uncheckAll() {
     const checkboxes = document.querySelectorAll(".itemCheckbox");
@@ -334,17 +309,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /***************************************************************
    * checkParents(childCheckbox)
-   *   - if child is checked, also check all ancestors
    ***************************************************************/
   function checkParents(childCheckbox) {
     let parent = childCheckbox.closest(".section").parentElement;
-    while (parent && parent.id !== "specificationsContent"
-                  && parent.id !== "programmingContent"
-                  && parent.id !== "troubleshootingContent"
-                  && parent.id !== "reportingCodesContent"
-                  && parent.id !== "wordLibraryContent"
-                  && parent.id !== "powerCalcContent"
-                  && parent.id !== "documentationContent") {
+    while (parent && parent.classList.contains("section-content")) {
       const parentSection = parent.closest(".section");
       if (parentSection) {
         const parentCheckbox = parentSection.querySelector(".itemCheckbox");
@@ -358,7 +326,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /***************************************************************
    * buildSelectedHierarchy(container, depth)
-   *   - Recursively gather text for checked items, plus children
    ***************************************************************/
   function buildSelectedHierarchy(container, depth) {
     let result = "";
@@ -368,7 +335,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const content = section.querySelector(":scope > .section-content");
       const checkbox = header.querySelector(".itemCheckbox");
 
-      // Recurse children
+      // Recurse
       const childLines = buildSelectedHierarchy(content, depth + 1);
 
       if (checkbox.checked || childLines.trim().length > 0) {
