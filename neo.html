@@ -8,73 +8,92 @@
 <body>
 
 <div class="container">
+
     <h1>NEO Panel</h1>
+    <p class="panel-description">
+        This page contains 7 sections for the DSC NEO Panel: Specifications, Programming, Troubleshooting,
+        Reporting Codes, Word Library, Power Consumption Calculator, and Documentation.
+        The <strong>Programming</strong> section has the full collapsible list you were using before,
+        with all the same search and “Generate” functionality.
+    </p>
 
     <!-- Search area -->
     <div class="search-container">
         <input type="text" id="searchBox" placeholder="Search..." />
-        <button id="searchButton">Global Search</button>
+        <button id="searchButton">Search</button>
         <button id="clearButton">Clear</button>
         <button id="collapseAllBtn">Collapse All</button>
     </div>
 
-    <!-- Section checkboxes -->
+    <!-- Checkboxes for which sections to include in the search -->
     <div class="sections-to-search">
-        <label><input type="checkbox" class="sectionSelector" value="Specifications" checked> 1. Specifications</label>
-        <label><input type="checkbox" class="sectionSelector" value="Programming" checked> 2. Programming</label>
-        <label><input type="checkbox" class="sectionSelector" value="Troubleshooting" checked> 3. Troubleshooting</label>
-        <label><input type="checkbox" class="sectionSelector" value="Reporting Codes" checked> 4. Reporting Codes</label>
-        <label><input type="checkbox" class="sectionSelector" value="Word Library" checked> 5. Word Library</label>
-        <label><input type="checkbox" class="sectionSelector" value="Power Consumption Calculator" checked> 6. Power Consumtion Calculator</label>
-        <label><input type="checkbox" class="sectionSelector" value="Documentation" checked> 7. Documentation</label>
+        <label><input type="checkbox" class="sectionSelector" value="Specifications" checked>1. Specifications</label>
+        <label><input type="checkbox" class="sectionSelector" value="Programming" checked>2. Programming</label>
+        <label><input type="checkbox" class="sectionSelector" value="Troubleshooting" checked>3. Troubleshooting</label>
+        <label><input type="checkbox" class="sectionSelector" value="Reporting Codes" checked>4. Reporting Codes</label>
+        <label><input type="checkbox" class="sectionSelector" value="Word Library" checked>5. Word Library</label>
+        <label><input type="checkbox" class="sectionSelector" value="Power Calc" checked>6. Power Consumption Calculator</label>
+        <label><input type="checkbox" class="sectionSelector" value="Documentation" checked>7. Documentation</label>
+
+        <!-- “Select All / Unselect All” -->
+        <label style="margin-left: 20px; font-weight: bold;">
+            <input type="checkbox" id="selectAllSections" checked>Select/Unselect All
+        </label>
     </div>
 
-    <hr/>
-
-    <!-- The 7 sections displayed below -->
-    <div class="panel-section" id="specifications">
+    <!-- The 7 sections displayed below, each with a container for the collapsible tree -->
+    <div class="panel-section">
         <h2>1. Specifications</h2>
         <div class="sectionContent" id="specificationsContent"></div>
     </div>
 
-    <div class="panel-section" id="programming">
+    <div class="panel-section">
         <h2>2. Programming</h2>
         <div class="sectionContent" id="programmingContent"></div>
     </div>
 
-    <div class="panel-section" id="troubleshooting">
+    <div class="panel-section">
         <h2>3. Troubleshooting</h2>
         <div class="sectionContent" id="troubleshootingContent"></div>
     </div>
 
-    <div class="panel-section" id="reportingCodes">
+    <div class="panel-section">
         <h2>4. Reporting Codes</h2>
         <div class="sectionContent" id="reportingCodesContent"></div>
     </div>
 
-    <div class="panel-section" id="wordLibrary">
+    <div class="panel-section">
         <h2>5. Word Library</h2>
-        <div class="sectionContent" id="wordLibraryContent"></div>
+        <div class="sectionContent" id="wordLibContent"></div>
     </div>
 
-    <div class="panel-section" id="powerCalc">
-        <h2>6. Power Consumtion Calculator</h2>
+    <div class="panel-section">
+        <h2>6. Power Consumption Calculator</h2>
         <div class="sectionContent" id="powerCalcContent"></div>
     </div>
 
-    <div class="panel-section" id="documentation">
+    <div class="panel-section">
         <h2>7. Documentation</h2>
         <div class="sectionContent" id="documentationContent"></div>
     </div>
 
-    <!-- "Generate" example if you still want to produce some output text -->
-    <button id="generateButton">Generate</button><br/>
+    <!-- "Generate" example to display all checked items as text -->
+    <button id="generateButton">Generate</button>
+    <br/>
     <textarea id="outputText" rows="10" readonly></textarea>
-
 </div>
 
-<!-- Load NEO data and script last -->
-<script src="neoData.js"></script>
+<!-- Load each section's data -->
+<script src="neoSpecData.js"></script>
+<script src="neoProgData.js"></script>
+<script src="neoTroubleData.js"></script>
+<script src="neoReportData.js"></script>
+<script src="neoWordLibData.js"></script>
+<script src="neoPowerCalcData.js"></script>
+<script src="neoDocData.js"></script>
+
+<!-- Then load the script to build / handle the collapsible structure -->
 <script src="neoScript.js"></script>
+
 </body>
 </html>
